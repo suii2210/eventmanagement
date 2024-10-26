@@ -8,9 +8,6 @@ import { Separator } from "@/components/ui/separator"
 import {
     Sheet,
     SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
     SheetTrigger,
   } from "@/components/ui/sheet"
 import Navitems from './Navitems'

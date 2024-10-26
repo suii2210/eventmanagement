@@ -1,5 +1,5 @@
 import { Schema, model, models } from "mongoose";
-import { tree } from "next/dist/build/templates/app-page";
+
 
 const UserSchema = new Schema({
     clerkId:{
