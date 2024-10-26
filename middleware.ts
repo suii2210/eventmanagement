@@ -1,6 +1,22 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server';
+import { clerkMiddleware } from '@clerk/nextjs/server';
 
-export default clerkMiddleware()
+import { NextRequest, NextFetchEvent } from 'next/server';
+
+
+export function middleware( req: NextRequest, event: NextFetchEvent) {
+  console.log('Request URL:', req.url);
+  console.log('NEXT_RUNTIME:', process.env.NEXT_RUNTIME);
+
+  // Ensure Clerk middleware only runs in environments that support it
+  if (process.env.NEXT_RUNTIME !== 'edge') {
+    // Run Clerk middleware in non-edge environments
+    return clerkMiddleware(req, event);
+  } else {
+    // Edge-compatible middleware logic (if needed)
+    return NextResponse.next(); // For Edge environments, simply continue the request
+  }
+}
 
 export const config = {
   matcher: [
@@ -9,4 +25,4 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
-}
+};
