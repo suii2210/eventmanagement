@@ -4,22 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-// Update the bg-primary and hover colors to maroon
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        // Updated maroon color
-        default: "bg-[#800000] text-primary-foreground hover:bg-[#660000]",
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-red-600 text-secondary-foreground hover:bg-red/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        default: "bg-red-600 text-white hover:bg-red-500", // Primary red button
+        destructive: "bg-red-700 text-white hover:bg-red-600", // Darker red for destructive action
+        outline: "border border-red-600 bg-background hover:bg-red-50 text-red-600", // Outline with red border and lighter red background on hover
+        secondary: "bg-red-500 text-white hover:bg-red-400", // Lighter red for secondary
+        ghost: "hover:bg-red-50 text-red-600", // Transparent background with red hover
+        link: "text-red-600 underline-offset-4 hover:underline", // Red link
       },
       size: {
         default: "h-10 px-4 py-2",
