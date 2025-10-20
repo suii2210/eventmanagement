@@ -1,5 +1,5 @@
 import { Calendar, MapPin, Ticket } from 'lucide-react';
-import { Event } from '../lib/supabase';
+import type { Event } from '../lib/types';
 
 interface EventsSectionProps {
   events: Event[];

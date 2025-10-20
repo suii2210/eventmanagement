@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { supabase } from '../lib/supabase';
+import { eventsAPI } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
 interface CreateEventModalProps {
@@ -75,21 +75,25 @@ export function CreateEventModal({ isOpen, onClose, onEventCreated }: CreateEven
         throw new Error('You must be logged in to create an event');
       }
 
-      const { error: insertError } = await supabase.from('events').insert({
-        organizer_id: user.id,
-        title,
-        description,
-        category,
-        location,
-        image_url: imageUrl,
-        start_date: new Date(startDate).toISOString(),
-        end_date: new Date(endDate).toISOString(),
-        ticket_price: parseFloat(ticketPrice),
-        total_tickets: parseInt(totalTickets),
-        available_tickets: parseInt(totalTickets),
-      });
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
 
-      if (insertError) throw insertError;
+      await eventsAPI.createEvent(
+        {
+          title,
+          description,
+          category,
+          location,
+          image_url: imageUrl || undefined,
+          start_date: new Date(startDate).toISOString(),
+          end_date: new Date(endDate).toISOString(),
+          ticket_price: parseFloat(ticketPrice),
+          total_tickets: parseInt(totalTickets, 10),
+        },
+        token
+      );
 
       setTitle('');
       setDescription('');

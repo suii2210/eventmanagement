@@ -14,7 +14,6 @@
     "server:start": "node server/dist/index.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
     "@tailwindcss/typography": "^0.5.19",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",

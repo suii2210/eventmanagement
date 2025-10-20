@@ -7,7 +7,8 @@ import { EventsSection } from './components/EventsSection';
 import { AuthModal } from './components/AuthModal';
 import { EventDetailModal } from './components/EventDetailModal';
 import { CreateEventModal } from './components/CreateEventModal';
-import { supabase, Event } from './lib/supabase';
+import { eventsAPI } from './lib/api';
+import type { Event } from './lib/types';
 
 function AppContent() {
   const { loading: authLoading } = useAuth();
@@ -24,21 +25,10 @@ function AppContent() {
     fetchEvents();
   }, []);
 
-  useEffect(() => {
-    filterEvents();
-  }, [searchQuery, location, events]);
-
   const fetchEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .gt('available_tickets', 0)
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-      setEvents(data || []);
+      const events = await eventsAPI.getEvents();
+      setEvents(events);
     } catch (error) {
       console.error('Error fetching events:', error);
     } finally {
@@ -46,26 +36,28 @@ function AppContent() {
     }
   };
 
-  const filterEvents = () => {
+  useEffect(() => {
     let filtered = events;
 
     if (searchQuery) {
+      const loweredSearch = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (event) =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.category.toLowerCase().includes(searchQuery.toLowerCase())
+          event.title.toLowerCase().includes(loweredSearch) ||
+          event.description.toLowerCase().includes(loweredSearch) ||
+          event.category.toLowerCase().includes(loweredSearch)
       );
     }
 
     if (location) {
+      const loweredLocation = location.toLowerCase();
       filtered = filtered.filter((event) =>
-        event.location.toLowerCase().includes(location.toLowerCase())
+        event.location.toLowerCase().includes(loweredLocation)
       );
     }
 
     setFilteredEvents(filtered);
-  };
+  }, [searchQuery, location, events]);
 
   if (authLoading || loading) {
     return (

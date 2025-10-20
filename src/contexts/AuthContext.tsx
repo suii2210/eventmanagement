@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  userType?: 'organizer' | 'attendee';
 }
 
 interface AuthContextType {
@@ -37,40 +38,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, _userType: 'organizer' | 'attendee') => {
-    try {
-      const response = await authAPI.signUp(email, password, fullName);
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setUser(response.user);
-    } catch (error) {
-      throw error;
-    }
+  const signUp = async (email: string, password: string, fullName: string, userType: 'organizer' | 'attendee') => {
+    const response = await authAPI.signUp(email, password, fullName);
+    const userWithType: User = { ...response.user, userType };
+    localStorage.setItem('authToken', response.token);
+    localStorage.setItem('user', JSON.stringify(userWithType));
+    setUser(userWithType);
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const response = await authAPI.signIn(email, password);
-      localStorage.setItem('authToken', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setUser(response.user);
-    } catch (error) {
-      throw error;
+    const response = await authAPI.signIn(email, password);
+    const storedUser = localStorage.getItem('user');
+    let userType: User['userType'];
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser) as User;
+        userType = parsed.userType;
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
     }
+
+    const userData: User = { ...response.user, userType };
+    localStorage.setItem('authToken', response.token);
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
   };
 
   const signOut = async () => {
-    try {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        await authAPI.signOut(token);
-      }
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
-      setUser(null);
-    } catch (error) {
-      throw error;
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      await authAPI.signOut(token);
     }
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    setUser(null);
   };
 
   return (
@@ -80,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
