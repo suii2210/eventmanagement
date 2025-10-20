@@ -1,36 +1,31 @@
 import { Router } from 'express';
-import type { FilterQuery } from 'mongoose';
-
-import Event from '../models/Event.js';
-import Booking from '../models/Booking.js';
-import type { IEvent } from '../models/Event.js';
-import { authenticate, AuthenticatedRequest } from '../middleware/auth.js';
+import Event from '../models/Event';
+import Booking from '../models/Booking';
+import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
 router.get('/', async (req, res) => {
   try {
     const { search, location } = req.query as { search?: string; location?: string };
-
-    const filters: FilterQuery<IEvent> = {
-      start_date: { $gte: new Date() },
-      available_tickets: { $gt: 0 },
-    };
+    const query = Event.find()
+      .where('start_date')
+      .gte(new Date())
+      .where('available_tickets')
+      .gt(0);
 
     if (search) {
       const regex = new RegExp(search, 'i');
-      filters.$or = [
-        { title: regex },
-        { description: regex },
-        { category: regex },
-      ];
+      query.find({
+        $or: [{ title: regex }, { description: regex }, { category: regex }],
+      });
     }
 
     if (location) {
-      filters.location = { $regex: location, $options: 'i' } as FilterQuery<IEvent>['location'];
+      query.find({ location: { $regex: location, $options: 'i' } });
     }
 
-    const events = await Event.find(filters).sort({ start_date: 1 });
+    const events = await query.sort({ start_date: 1 });
 
     res.json({ events });
   } catch (error) {

@@ -74,21 +74,10 @@ const EventSchema = new Schema<IEvent>(
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform: (_doc, ret: Record<string, unknown>) => {
-        const mutable = ret as typeof ret & {
-          _id?: mongoose.Types.ObjectId;
-          organizer_id?: mongoose.Types.ObjectId | string;
-          id?: string;
-        };
-
-        if (mutable._id) {
-          mutable.id = mutable._id.toString();
-          delete mutable._id;
-        }
-
-        if (mutable.organizer_id instanceof mongoose.Types.ObjectId) {
-          mutable.organizer_id = mutable.organizer_id.toString();
-        }
+      transform: (_doc, ret) => {
+        ret.id = ret._id.toString();
+        ret.organizer_id = ret.organizer_id?.toString();
+        delete ret._id;
       },
     },
   }

@@ -43,26 +43,11 @@ const BookingSchema = new Schema<IBooking>(
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform: (_doc, ret: Record<string, unknown>) => {
-        const mutable = ret as typeof ret & {
-          _id?: mongoose.Types.ObjectId;
-          event_id?: mongoose.Types.ObjectId | string;
-          user_id?: mongoose.Types.ObjectId | string;
-          id?: string;
-        };
-
-        if (mutable._id) {
-          mutable.id = mutable._id.toString();
-          delete mutable._id;
-        }
-
-        if (mutable.event_id instanceof mongoose.Types.ObjectId) {
-          mutable.event_id = mutable.event_id.toString();
-        }
-
-        if (mutable.user_id instanceof mongoose.Types.ObjectId) {
-          mutable.user_id = mutable.user_id.toString();
-        }
+      transform: (_doc, ret) => {
+        ret.id = ret._id.toString();
+        ret.event_id = ret.event_id?.toString();
+        ret.user_id = ret.user_id?.toString();
+        delete ret._id;
       },
     },
   }
