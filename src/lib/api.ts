@@ -1,3 +1,5 @@
+import type { Booking, CreateEventInput, Event } from './types';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export interface AuthResponse {
@@ -10,6 +12,31 @@ export interface AuthResponse {
   };
 }
 
+export interface EventsResponse {
+  events: Event[];
+}
+
+export interface BookingResponse {
+  message: string;
+  booking: Booking;
+  event: Event;
+}
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  if (!response.ok) {
+    let errorMessage = 'Request failed';
+    try {
+      const error = await response.json();
+      errorMessage = error.error || error.message || errorMessage;
+    } catch (error) {
+      console.error('Failed to parse error response:', error);
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
+}
+
 export const authAPI = {
   async signUp(email: string, password: string, name?: string): Promise<AuthResponse> {
     const response = await fetch(`${API_URL}/auth/signup`, {
@@ -20,12 +47,7 @@ export const authAPI = {
       body: JSON.stringify({ email, password, name }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Signup failed');
-    }
-
-    return response.json();
+    return handleResponse<AuthResponse>(response);
   },
 
   async signIn(email: string, password: string): Promise<AuthResponse> {
@@ -37,20 +59,57 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Login failed');
-    }
-
-    return response.json();
+    return handleResponse<AuthResponse>(response);
   },
 
   async signOut(token: string): Promise<void> {
     await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
+  },
+};
+
+export const eventsAPI = {
+  async getEvents(params?: { search?: string; location?: string }): Promise<Event[]> {
+    const url = new URL(`${API_URL}/events`);
+    if (params?.search) {
+      url.searchParams.set('search', params.search);
+    }
+    if (params?.location) {
+      url.searchParams.set('location', params.location);
+    }
+
+    const response = await fetch(url.toString());
+    const data = await handleResponse<EventsResponse>(response);
+    return data.events;
+  },
+
+  async createEvent(event: CreateEventInput, token: string): Promise<Event> {
+    const response = await fetch(`${API_URL}/events`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(event),
+    });
+
+    return handleResponse<Event>(response);
+  },
+
+  async bookEvent(eventId: string, quantity: number, token: string): Promise<BookingResponse> {
+    const response = await fetch(`${API_URL}/events/${eventId}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ quantity }),
+    });
+
+    return handleResponse<BookingResponse>(response);
   },
 };

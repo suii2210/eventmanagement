@@ -31,8 +31,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         await signIn(email, password);
       }
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An error occurred');
+      }
     } finally {
       setLoading(false);
     }

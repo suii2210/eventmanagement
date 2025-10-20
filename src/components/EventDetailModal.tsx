@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { X, Calendar, MapPin, Ticket, User } from 'lucide-react';
-import { Event } from '../lib/supabase';
+import { useEffect, useState } from 'react';
+import { X, Calendar, MapPin, Ticket } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { eventsAPI } from '../lib/api';
+import type { Event } from '../lib/types';
 
 interface EventDetailModalProps {
   event: Event | null;
@@ -14,6 +14,19 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [availableTickets, setAvailableTickets] = useState(event?.available_tickets ?? 0);
+
+  useEffect(() => {
+    if (event) {
+      setAvailableTickets(event.available_tickets);
+      setQuantity(1);
+      setSuccess(false);
+    } else {
+      setQuantity(1);
+      setSuccess(false);
+      setAvailableTickets(0);
+    }
+  }, [event]);
 
   if (!event) return null;
 
@@ -23,39 +36,31 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
       return;
     }
 
-    if (quantity > event.available_tickets) {
+    if (quantity > availableTickets) {
       alert('Not enough tickets available');
       return;
     }
 
     setLoading(true);
     try {
-      const totalAmount = event.ticket_price * quantity;
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token missing');
+      }
 
-      const { error: bookingError } = await supabase.from('bookings').insert([
-        {
-          event_id: event.id,
-          user_id: user.id,
-          quantity,
-          total_amount: totalAmount,
-        },
-      ]);
-
-      if (bookingError) throw bookingError;
-
-      const { error: updateError } = await supabase
-        .from('events')
-        .update({ available_tickets: event.available_tickets - quantity })
-        .eq('id', event.id);
-
-      if (updateError) throw updateError;
+      const { event: updatedEvent } = await eventsAPI.bookEvent(event.id, quantity, token);
+      setAvailableTickets(updatedEvent.available_tickets);
 
       setSuccess(true);
       setTimeout(() => {
         onClose();
       }, 2000);
-    } catch (error: any) {
-      alert(error.message || 'Failed to book tickets');
+    } catch (error) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert('Failed to book tickets');
+      }
     } finally {
       setLoading(false);
     }
@@ -130,7 +135,7 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
 
                 <div className="flex items-center gap-3 text-gray-700">
                   <Ticket className="w-5 h-5 text-orange-600" />
-                  <span>{event.available_tickets} tickets available</span>
+                  <span>{availableTickets} tickets available</span>
                 </div>
               </div>
 
@@ -156,7 +161,7 @@ export function EventDetailModal({ event, onClose }: EventDetailModalProps) {
                     <input
                       type="number"
                       min="1"
-                      max={event.available_tickets}
+                      max={availableTickets}
                       value={quantity}
                       onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
                       className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
