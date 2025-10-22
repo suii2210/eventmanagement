@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
-    "server": "nodemon server/index.ts",
+    "server": "nodemon server/index.js",
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node server/dist/index.js"
   },
@@ -22,10 +22,12 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.344.0",
     "mongoose": "^8.19.1",
+    "openai": "^6.6.0",
     "quill": "^2.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-quill": "^2.0.0"
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^7.9.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

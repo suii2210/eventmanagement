@@ -6,12 +6,17 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./",
+    "allowJs": true,                  // ✅ allow .js files
+    "checkJs": false,                 // ✅ skip strict type checking for .js
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": ["**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "**/*.js"                         // ✅ include all JS too
+  ],
   "exclude": ["node_modules", "dist"]
 }

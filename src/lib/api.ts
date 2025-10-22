@@ -73,13 +73,16 @@ export const authAPI = {
 };
 
 export const eventsAPI = {
-  async getEvents(params?: { search?: string; location?: string }): Promise<Event[]> {
+  async getEvents(params?: { search?: string; location?: string; category?: string }): Promise<Event[]> {
     const url = new URL(`${API_URL}/events`);
-    if (params?.search) {
-      url.searchParams.set('search', params.search);
+    if (params?.search && params.search.trim()) {
+      url.searchParams.set('search', params.search.trim());
     }
-    if (params?.location) {
-      url.searchParams.set('location', params.location);
+    if (params?.location && params.location.trim()) {
+      url.searchParams.set('location', params.location.trim());
+    }
+    if (params?.category && params.category.trim()) {
+      url.searchParams.set('category', params.category.trim());
     }
 
     const response = await fetch(url.toString());

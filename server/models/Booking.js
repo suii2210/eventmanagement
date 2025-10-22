@@ -1,16 +1,8 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose from 'mongoose';
 
-export interface IBooking extends Document {
-  event_id: Schema.Types.ObjectId;
-  user_id: Schema.Types.ObjectId;
-  quantity: number;
-  total_amount: number;
-  booking_status: 'confirmed' | 'cancelled';
-  created_at: Date;
-  updated_at: Date;
-}
+const { Schema } = mongoose;
 
-const BookingSchema = new Schema<IBooking>(
+const BookingSchema = new Schema(
   {
     event_id: {
       type: Schema.Types.ObjectId,
@@ -53,4 +45,4 @@ const BookingSchema = new Schema<IBooking>(
   }
 );
 
-export default mongoose.model<IBooking>('Booking', BookingSchema);
+export default mongoose.model('Booking', BookingSchema);

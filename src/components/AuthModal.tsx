@@ -12,10 +12,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [userType, setUserType] = useState<'organizer' | 'attendee'>('attendee');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signUp, signIn } = useAuth();
+
+  const { signUp, signIn } = useAuth(); // expected: signUp(name, email, password) OR signUp(email,password,name)? see note below
 
   if (!isOpen) return null;
 
@@ -26,17 +26,14 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (isSignUp) {
-        await signUp(email, password, fullName, userType);
+        // adjust order to match your useAuth signature (see note below)
+        await signUp(email, password, fullName);
       } else {
         await signIn(email, password);
       }
       onClose();
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An error occurred');
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
     }
@@ -48,6 +45,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Close"
         >
           <X className="w-6 h-6" />
         </button>
@@ -64,50 +62,18 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {isSignUp && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  I want to
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setUserType('attendee')}
-                    className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                      userType === 'attendee'
-                        ? 'border-orange-600 bg-orange-50 text-orange-600'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                    }`}
-                  >
-                    Buy Tickets
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setUserType('organizer')}
-                    className={`px-4 py-3 rounded-lg border-2 transition-all ${
-                      userType === 'organizer'
-                        ? 'border-orange-600 bg-orange-50 text-orange-600'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
-                    }`}
-                  >
-                    Create Events
-                  </button>
-                </div>
-              </div>
-            </>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Full Name
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                required
+              />
+            </div>
           )}
 
           <div>

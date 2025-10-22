@@ -1,20 +1,19 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { authAPI } from '../lib/api';
 
-interface User {
+type User = {
   id: string;
   email: string;
   name?: string;
-  userType?: 'organizer' | 'attendee';
-}
+};
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string, userType: 'organizer' | 'attendee') => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-}
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,15 +21,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Load from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     const storedUser = localStorage.getItem('user');
 
     if (token && storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
+        setUser(JSON.parse(storedUser) as User);
+      } catch (err) {
+        console.error('Error parsing stored user:', err);
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
       }
@@ -38,37 +38,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, userType: 'organizer' | 'attendee') => {
-    const response = await authAPI.signUp(email, password, fullName);
-    const userWithType: User = { ...response.user, userType };
-    localStorage.setItem('authToken', response.token);
-    localStorage.setItem('user', JSON.stringify(userWithType));
-    setUser(userWithType);
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const res = await authAPI.signUp(email, password, fullName); // expects { token, user }
+    localStorage.setItem('authToken', res.token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    setUser(res.user);
   };
 
   const signIn = async (email: string, password: string) => {
-    const response = await authAPI.signIn(email, password);
-    const storedUser = localStorage.getItem('user');
-    let userType: User['userType'];
-    if (storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser) as User;
-        userType = parsed.userType;
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-    }
-
-    const userData: User = { ...response.user, userType };
-    localStorage.setItem('authToken', response.token);
-    localStorage.setItem('user', JSON.stringify(userData));
-    setUser(userData);
+    const res = await authAPI.signIn(email, password); // expects { token, user }
+    localStorage.setItem('authToken', res.token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    setUser(res.user);
   };
 
   const signOut = async () => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      await authAPI.signOut(token);
+      try {
+        await authAPI.signOut(token); // optional; your API can just return 200
+      } catch (e) {
+        // ignore network errors on logout
+      }
     }
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
@@ -84,9 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 }

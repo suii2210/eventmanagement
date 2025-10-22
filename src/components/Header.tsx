@@ -1,5 +1,10 @@
 import { Calendar, MapPin, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from "react-router-dom";
+
+
+
+
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -8,10 +13,27 @@ interface HeaderProps {
   onSearchChange: (value: string) => void;
   location: string;
   onLocationChange: (value: string) => void;
+  onSearch: () => void;
 }
 
-export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchChange, location, onLocationChange }: HeaderProps) {
+export function Header({
+  onAuthClick,
+  onCreateEventClick,
+  searchQuery,
+  onSearchChange,
+  location,
+  onLocationChange,
+  onSearch,
+}: HeaderProps) {
   const { user, signOut } = useAuth();
+
+  const handleCreateEventClick = () => {
+    if (user) onCreateEventClick();
+    else onAuthClick();
+  };
+
+
+  const nav = useNavigate();
 
   return (
     <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -19,7 +41,7 @@ export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchC
         <div className="flex items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <Calendar className="w-8 h-8 text-orange-600" />
-            <span className="text-2xl font-bold text-gray-900">EventHub</span>
+            <span className="text-2xl font-bold text-gray-900">Occasia</span>
           </div>
 
           <div className="flex-1 max-w-2xl flex gap-2">
@@ -30,6 +52,11 @@ export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchC
                 placeholder="Search events"
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onSearch();
+                  }
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
@@ -40,10 +67,18 @@ export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchC
                 placeholder="Location"
                 value={location}
                 onChange={(e) => onLocationChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onSearch();
+                  }
+                }}
                 className="w-48 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
-            <button className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+            <button 
+              onClick={onSearch}
+              className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+            >
               Search
             </button>
           </div>
@@ -52,15 +87,18 @@ export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchC
             <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
               Find Events
             </button>
-            <button
-              onClick={user?.user_type === 'organizer' ? onCreateEventClick : onAuthClick}
+
+           <button
+              onClick={() => nav("/create/select")}
               className="text-gray-700 hover:text-orange-600 transition-colors font-medium"
             >
               Create Events
             </button>
+
             <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
               Help Center
             </button>
+
             {user ? (
               <>
                 <button className="text-gray-700 hover:text-orange-600 transition-colors font-medium">
@@ -95,3 +133,5 @@ export function Header({ onAuthClick, onCreateEventClick, searchQuery, onSearchC
     </header>
   );
 }
+
+export default Header;
